@@ -61,6 +61,13 @@ input[type=checkbox]:checked{background-color:var(--ac);border-color:var(--ac);b
 .ok-c{width:44px;height:44px;border-radius:50%;background:var(--ac2);display:grid;place-items:center;margin-bottom:16px}.ok-c svg{width:22px;stroke:var(--ac);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.cmp div{border:1px solid var(--bd);border-radius:10px;padding:12px;font-size:13px;white-space:pre-wrap;max-height:200px;overflow:auto;background:var(--card)}.cmp small{display:block;color:var(--tx2);margin-bottom:4px}
 .row.pick{cursor:pointer}
+.row.pick.on{border-color:var(--ac);background:var(--ac2)}
+.pv-card{margin-top:18px;border:1px solid var(--bd);border-radius:12px;background:var(--card);overflow:hidden}
+.pv-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--bd);font-weight:600;font-size:14px}
+.pv-body{padding:16px;display:flex;justify-content:center;align-items:center;background:var(--s1);min-height:220px}
+.pv-body img{max-width:100%;max-height:520px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15)}
+.pv-body iframe{width:100%;height:540px;border:0;border-radius:8px}
+.pv-body pre{margin:0;width:100%;max-height:420px;overflow:auto;background:var(--card);padding:14px;border-radius:8px;font-family:monospace;font-size:13px;white-space:pre-wrap;border:1px solid var(--bd)}
 @media (max-width:640px){.cats,.cmp{grid-template-columns:1fr}.steps span:not(.on){display:none}.steps span+span:before{display:none}.hr .local{display:none}header{padding:14px 16px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -173,15 +180,62 @@ processing(){const J=S.job||{progress:.4,files:S.files.map((f,i)=>({name:f.file.
   <div class="bar ${S.preview?'':'live'}"><i id="p-bar" style="width:${p}%"></i></div><div class="st" id="p-pct">${p}%</div>
   <div class="list" id="p-list">${J.files.map(f=>`<div class="row" id="p-row-${esc(f.name)}">${icon(ext(f.name))}<div class="n"><div>${esc(f.name)}</div></div><span class="st ${f.status==='done'?'ok':f.status==='failed'?'er':''}">${lab[f.status]||f.status}</span></div>`).join('')}</div>
   ${S.preview?`<div class="note">Layout preview only. No files are being processed.</div><div class="acts"><span></span><button class="btn p" data-go="results">Next screen</button></div>`:''}`},
-results(){const J=S.job||{files:S.files.map(f=>({name:f.file.name,status:'preview'}))},d=J.files.filter(f=>f.status==='done'),bad=J.files.filter(f=>f.status==='failed'),pv=(J.files[S.sel]||{}).preview;
+results(){
+  const J=S.job||{files:S.files.map(f=>({name:f.file.name,status:'preview'}))};
+  const d=J.files.filter(f=>f.status==='done'),bad=J.files.filter(f=>f.status==='failed');
+  const curF=(J.files[S.sel]||J.files[0]||{});
+  const pv=curF.preview;
+  const fExt=ext(curF.name||'');
+  const fileUrl=S.id?`/api/jobs/${S.id}/file/${S.sel}`:'';
+
+  let previewWidget='';
+  if(S.id&&curF.status==='done'){
+    if(['jpg','jpeg','png','webp','bmp','gif'].includes(fExt)){
+      previewWidget=`
+      <div class="pv-card">
+        <div class="pv-head">
+          <span>Redacted Image Output · ${esc(curF.name)}</span>
+          <a class="btn" style="padding:4px 10px;font-size:12px;text-decoration:none" href="${fileUrl}" target="_blank" download="${esc(curF.name)}">Download Redacted Image</a>
+        </div>
+        <div class="pv-body">
+          <img src="${fileUrl}" alt="Redacted preview" />
+        </div>
+      </div>`;
+    }else if(fExt==='pdf'){
+      previewWidget=`
+      <div class="pv-card">
+        <div class="pv-head">
+          <span>Redacted PDF Document · ${esc(curF.name)}</span>
+          <a class="btn" style="padding:4px 10px;font-size:12px;text-decoration:none" href="${fileUrl}" target="_blank" download="${esc(curF.name)}">Open in Tab / Download PDF</a>
+        </div>
+        <div class="pv-body" style="padding:0">
+          <iframe src="${fileUrl}#toolbar=0" title="PDF preview"></iframe>
+        </div>
+      </div>`;
+    }else{
+      previewWidget=`
+      <div class="pv-card">
+        <div class="pv-head">
+          <span>Redacted Output Content · ${esc(curF.name)}</span>
+          <a class="btn" style="padding:4px 10px;font-size:12px;text-decoration:none" href="${fileUrl}" target="_blank" download="${esc(curF.name)}">Download Clean File</a>
+        </div>
+        <div class="pv-body">
+          <pre>${esc((pv&&pv.after_full)||(pv&&pv.after)||'')}</pre>
+        </div>
+      </div>`;
+    }
+  }
+
   return `<div class="ok-c"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
   <h1>${S.preview?'Results layout':`${d.length} file${d.length===1?'':'s'} redacted`}</h1>
   <p class="lead">${S.preview?'Preview only. Nothing was processed or saved.':bad.length?`${bad.length} could not be processed.`:'Your originals were not modified.'}</p>
-  <div class="list">${J.files.map((f,i)=>`<div class="row pick" data-sel="${i}">${icon(ext(f.name))}<div class="n"><div>${esc(f.name)}</div>${f.error?`<small>${esc(f.error)}</small>`:''}</div><span class="st ${f.status==='done'?'ok':f.status==='failed'?'er':''}">${f.status==='done'?'Redacted':f.status==='failed'?'Failed':'Preview'}</span></div>`).join('')}</div>
+  <div class="list">${J.files.map((f,i)=>`<div class="row pick ${i===S.sel?'on':''}" data-sel="${i}">${icon(ext(f.name))}<div class="n"><div>${esc(f.name)}</div>${f.error?`<small>${esc(f.error)}</small>`:''}</div><span class="st ${f.status==='done'?'ok':f.status==='failed'?'er':''}">${f.status==='done'?'Redacted':f.status==='failed'?'Failed':'Preview'}</span></div>`).join('')}</div>
   ${pv?`<div class="cmp"><div><small>Before</small>${esc(pv.before)}</div><div><small>After</small>${esc(pv.after)}</div></div>`:''}
-  <div class="note">${S.preview?'':`Re-extraction check: ${J.files.every(f=>f.verified)?'passed for every file.':'not reported by the engine.'} `}Output is written to a new folder, never over your originals.${S.saved?`<br>Saved to ${esc(S.saved)}`:''}</div>
+  ${previewWidget}
+  <div class="note">${S.preview?'':`Re-extraction check: ${J.files.every(f=>f.verified)?'passed for every file.':'not reported by the engine.'} `}Output is written to a new folder, never over your originals.${S.saved?`<br>Saved to <b>${esc(S.saved)}</b> (existing files were safely preserved without overwriting)`:''}</div>
   ${S.msg?`<div class="note er">${esc(S.msg)}</div>`:''}
-  <div class="acts"><button class="btn" data-reset>Start over</button><span style="display:flex;gap:8px">${S.saved?'<button class="btn" data-open>Open folder</button>':''}<button class="btn p" data-save ${S.preview||!d.length?'disabled':''}>${S.saved?'Save again':'Save to Desktop'}</button></span></div>`}
+  <div class="acts"><button class="btn" data-reset>Start over</button><span style="display:flex;gap:8px">${S.saved?'<button class="btn" data-open>Open folder</button>':''}<button class="btn p" data-save ${S.preview||!d.length?'disabled':''}>${S.saved?'Save again':'Save to Desktop'}</button></span></div>`;
+}
 };
 function render(){stepper();const m=$('#main');m.innerHTML=`<div class="screen">${V[S.step]()}</div>`}
 function go(s){S.step=s;S.msg='';render();scrollTo(0,0)}
@@ -247,7 +301,7 @@ document.addEventListener('click',async e=>{const t=e.target.closest('[data-go],
   else if(d.cx){S.custom.splice(+d.cx,1);render()}else if(d.lv){S.level=+d.lv;render()}
   else if('start' in d)start();else if('prev' in d){e.preventDefault();S.preview=true;S.job=null;go('processing')}
   else if(d.sel){S.sel=+d.sel;render()}
-  else if('save' in d){try{const r=await API.save(S.id);S.saved=r.folder;S.msg=''}catch(x){S.msg='Could not save to the Desktop. Check that the container has the Desktop folder mounted.'}render()}
+  else if('save' in d){try{const r=await API.save(S.id);S.saved=r.folder+(r.saved_files&&r.saved_files.length?' ('+r.saved_files.join(', ')+')':'');S.msg=''}catch(x){S.msg='Could not save to the Desktop. Check that the container has the Desktop folder mounted.'}render()}
   else if('open' in d){try{await API.open(S.id)}catch(x){}}
   else if('reset' in d){S.files=[];S.job=null;S.id=null;S.saved='';S.preview=false;go('files')}});
 document.addEventListener('keydown',e=>{if(e.target.id==='cu'&&e.key==='Enter'){const v=e.target.value.trim();if(v&&!S.custom.includes(v)){S.custom.push(v);render();$('#cu').focus()}}});

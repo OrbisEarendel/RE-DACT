@@ -97,7 +97,7 @@ def process_text(text: str, level: int, enabled_types: set[str] | None) -> tuple
     before_preview = text[:200] + ("..." if len(text) > 200 else "")
     after_preview = res_str[:200] + ("..." if len(res_str) > 200 else "")
 
-    return res_str.encode("utf-8"), {"before": before_preview, "after": after_preview}
+    return res_str.encode("utf-8"), {"before": before_preview, "after": after_preview, "after_full": res_str}
 
 
 def process_pdf(data: bytes, level: int, enabled_types: set[str] | None) -> tuple[bytes, dict]:
@@ -204,7 +204,49 @@ class RedactHandler(BaseHTTPRequestHandler):
             return
 
         if path.startswith("/api/jobs/"):
-            job_id = path.split("/")[3]
+            parts = path.split("/")
+            job_id = parts[3]
+            # Route: GET /api/jobs/<id>/file/<idx_or_name> -> serve the redacted file content
+            if len(parts) >= 6 and parts[4] == "file":
+                file_ref = parts[5]
+                files = OUTPUT_FILES.get(job_id, [])
+                target_file = None
+                if file_ref.isdigit():
+                    idx = int(file_ref)
+                    if 0 <= idx < len(files):
+                        target_file = files[idx]
+                else:
+                    for fn, data in files:
+                        if fn == file_ref:
+                            target_file = (fn, data)
+                            break
+
+                if target_file:
+                    fn, data = target_file
+                    ext = Path(fn).suffix.lower()
+                    mime_types = {
+                        ".png": "image/png",
+                        ".jpg": "image/jpeg",
+                        ".jpeg": "image/jpeg",
+                        ".webp": "image/webp",
+                        ".bmp": "image/bmp",
+                        ".pdf": "application/pdf",
+                        ".txt": "text/plain; charset=utf-8",
+                        ".csv": "text/csv; charset=utf-8",
+                        ".json": "application/json",
+                    }
+                    content_type = mime_types.get(ext, "application/octet-stream")
+                    self.send_response(200)
+                    self.send_header("Content-Type", content_type)
+                    self.send_header("Content-Length", str(len(data)))
+                    self.send_header("Content-Disposition", f'inline; filename="{Path(fn).stem}_redacted{ext}"')
+                    self.end_headers()
+                    self.wfile.write(data)
+                    return
+                else:
+                    self._send_json({"error": "File not found"}, status=404)
+                    return
+
             job = JOBS.get(job_id)
             if job:
                 self._send_json(job)
@@ -265,13 +307,19 @@ class RedactHandler(BaseHTTPRequestHandler):
             out_dir = DEFAULT_OUTPUT_DIR
             out_dir.mkdir(parents=True, exist_ok=True)
 
+            saved_names = []
             for fn, data in files_to_save:
                 stem = Path(fn).stem
                 suffix = Path(fn).suffix
                 out_path = out_dir / f"{stem}_redacted{suffix}"
+                counter = 1
+                while out_path.exists():
+                    out_path = out_dir / f"{stem}_redacted_{counter}{suffix}"
+                    counter += 1
                 out_path.write_bytes(data)
+                saved_names.append(out_path.name)
 
-            self._send_json({"folder": str(out_dir)})
+            self._send_json({"folder": str(out_dir), "saved_files": saved_names})
             return
 
         if path.startswith("/api/jobs/") and path.endswith("/open"):
