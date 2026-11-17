@@ -1,0 +1,11 @@
+{
+  "_note": "Ground truth for samples/test.txt. Detectors are scored against this. Add to it, never loosen it.",
+  "must_find": [
+    {"text": "Priya Sharma", "type": "PERSON"},
+    {"text": "+91 98765 43210", "type": "PHONE"},
+    {"text": "priya.sharma@example.com", "type": "EMAIL"},
+    {"text": "1234 5678 9012", "type": "ID_NUMBER"},
+    {"text": "14/03/1990", "type": "DATE"}
+  ],
+  "stub_can_find_now": ["PHONE", "EMAIL", "ID_NUMBER"]
+}
