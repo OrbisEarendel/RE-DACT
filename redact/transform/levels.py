@@ -12,6 +12,7 @@ from typing import Mapping
 
 from redact.entity import Entity
 from redact.detect import regex_types as T
+from policy.policy import canonical
 
 
 L1_TYPES = {
@@ -106,10 +107,11 @@ def apply(text: str, ents: list[Entity], level: int,
                 and 0 <= ent.start < ent.end <= len(text)):
             raise ValueError("Entity contains invalid text offsets")
         value = text[ent.start:ent.end]
-        if ent.type in L1_TYPES:
-            replacement = _mask(ent.type, value)
-        elif level >= 2 and ent.type in L2_TYPES:
-            replacement = _generalize(ent.type, value)
+        ctype = canonical(ent.type)
+        if ctype in L1_TYPES:
+            replacement = _mask(ctype, value)
+        elif level >= 2 and ctype in L2_TYPES:
+            replacement = _generalize(ctype, value)
         else:
             continue
         candidates.append((ent.start, ent.end, float(ent.score), replacement))
