@@ -1,0 +1,6 @@
+pyyaml
+pytest
+pillow
+# P1 adds: spacy
+# P2 adds: pymupdf (AGPL, check license), pdfplumber
+# P4 adds: streamlit (or fastapi)
