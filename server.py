@@ -45,12 +45,10 @@ OUTPUT_FILES: dict[str, list[tuple[str, bytes]]] = {}
 
 # Map UI level names to integer levels
 LEVEL_MAP = {
-    "mask": 1,
-    "generalise": 2,
-    "generalize": 2,
-    "pseudonyms": 2,
-    "anonymise": 2,
-    "synthetic": 2,
+    "1": 1, "2": 2, "3": 3, "4": 4,
+    "l1": 1, "l2": 2, "l3": 3, "l4": 4,
+    "l1 light": 1, "l2 medium": 2, "l3 strong": 3, "l4 synthetic": 4,
+    "mask": 1, "generalise": 2, "generalize": 2, "pseudonyms": 3, "anonymise": 3, "synthetic": 4,
 }
 
 
@@ -76,7 +74,7 @@ def process_image(data: bytes, level: int, enabled_types: set[str] | None) -> tu
         visual_words = detect_visual_pii(img_bgr)
         words.extend(visual_words)
 
-    # 4. Redact image
+    # 4. Redact image (images cannot be generalized, so they are always boxed)
     redacted = redact_image(img_bgr, words, selected_ents, doc, style="box")
 
     # Encode back to PNG/JPEG bytes
@@ -90,13 +88,11 @@ def process_image(data: bytes, level: int, enabled_types: set[str] | None) -> tu
 
 
 def process_text(text: str, level: int, enabled_types: set[str] | None) -> tuple[bytes, dict]:
-    """Process plain text through Detection, Policy filtering, and Transformation (Mask / Generalise)."""
+    """Process plain text through Detection, Policy filtering, and Transformation (L1-L4)."""
     raw_ents = detect(text, threshold=0.4)
     selected_ents = policy.select(raw_ents, level=level, enabled_types=enabled_types)
 
-    # Use Alan's transform module for Level 1 (Mask) and Level 2 (Generalise)
-    transform_level = 2 if level >= 2 else 1
-    res_str = apply_transform(text, selected_ents, level=transform_level)
+    res_str = apply_transform(text, selected_ents, level=level)
 
     before_preview = text[:200] + ("..." if len(text) > 200 else "")
     after_preview = res_str[:200] + ("..." if len(res_str) > 200 else "")
@@ -117,18 +113,30 @@ def process_pdf(data: bytes, level: int, enabled_types: set[str] | None) -> tupl
 
 
 def run_job(job_id: str, files: list[tuple[str, bytes]], options: dict):
-    level_name = options.get("level", "mask").lower()
-    level_int = LEVEL_MAP.get(level_name, 1)
+    raw_level = options.get("level", 1)
+    if isinstance(raw_level, int):
+        level_int = max(1, min(4, raw_level))
+    else:
+        level_int = LEVEL_MAP.get(str(raw_level).lower().strip(), 1)
 
     # Full legal policy: enabled_types=None applies the full DPDP Act & IT Rules taxonomy
     enabled_types: set[str] | None = None
 
     job = JOBS[job_id]
-    processed_files = []
-    output_list = []
+    job["files"] = [
+        {"name": fn, "status": "running" if i == 0 else "waiting", "verified": False}
+        for i, (fn, _) in enumerate(files)
+    ]
+    job["progress"] = 0.0
 
+    output_list = []
     total = len(files)
+
     for idx, (filename, data) in enumerate(files):
+        for f in job["files"]:
+            if f["name"] == filename:
+                f["status"] = "running"
+
         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
         try:
             if ext in ("jpg", "jpeg", "png", "bmp", "webp"):
@@ -140,22 +148,19 @@ def run_job(job_id: str, files: list[tuple[str, bytes]], options: dict):
                 out_bytes, preview = process_text(text, level_int, enabled_types)
 
             output_list.append((filename, out_bytes))
-            processed_files.append({
-                "name": filename,
-                "status": "done",
-                "preview": preview,
-                "verified": True,
-            })
+            for f in job["files"]:
+                if f["name"] == filename:
+                    f["status"] = "done"
+                    f["preview"] = preview
+                    f["verified"] = True
         except Exception as exc:
-            processed_files.append({
-                "name": filename,
-                "status": "failed",
-                "error": str(exc),
-                "verified": False,
-            })
+            for f in job["files"]:
+                if f["name"] == filename:
+                    f["status"] = "failed"
+                    f["error"] = str(exc)
+                    f["verified"] = False
 
         job["progress"] = round((idx + 1) / total, 2)
-        job["files"] = processed_files
 
     OUTPUT_FILES[job_id] = output_list
     job["status"] = "done"

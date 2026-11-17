@@ -68,15 +68,22 @@ def redact_pdf(
         # Match entities to word boxes
         word_matches = _find_words_for_entities(ents, norm_doc)
 
+        # Include visual PII words (faces, QR codes)
+        for _, _, ref in norm_doc.spans:
+            if isinstance(ref, Word) and ref.text in ("[PHOTO]", "[QR]"):
+                word_matches.append((ref, ref.text[1:-1]))
+
         # Group redaction rects by page
         page_rects: dict[int, list[pymupdf.Rect]] = {}
         for word, _ in word_matches:
             pg = word.page
             if pg not in page_rects:
                 page_rects[pg] = []
-            # Word coordinates (x, y, w, h)
-            rect = pymupdf.Rect(word.x, word.y, word.x + word.w, word.y + word.h)
-            page_rects[pg].append(rect)
+            if 0 <= pg < len(doc):
+                # Word coordinates (x, y, w, h) with safe padding, clipped to page
+                rect = (pymupdf.Rect(word.x - 0.5, word.y - 0.5, word.x + word.w + 0.5, word.y + word.h + 0.5)) & doc[pg].rect
+                if not rect.is_empty and rect.is_valid:
+                    page_rects[pg].append(rect)
 
         # Apply redactions to each page
         for pg_idx, rects in page_rects.items():

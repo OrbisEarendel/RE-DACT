@@ -45,7 +45,25 @@ def test_l1_does_not_generalize_age():
 
 def test_invalid_level_rejected():
     with pytest.raises(ValueError):
-        apply("text", [], 3)
+        apply("text", [], 0)
+    with pytest.raises(ValueError):
+        apply("text", [], 5)
+
+
+def test_l3_masks_address_and_org():
+    text = "Works at Infosys in Bengaluru"
+    ents = [Entity(T.ORGANIZATION, 9, 16), Entity(T.CITY, 20, 29)]
+    res = apply(text, ents, 3)
+    assert "[ORGANIZATION]" in res
+    assert "[CITY]" in res
+
+
+def test_l4_synthetic():
+    text = "Ramesh lives in Bengaluru"
+    ents = [Entity(T.PERSON, 0, 6), Entity(T.CITY, 16, 25)]
+    res = apply(text, ents, 4)
+    assert "[SYNTHETIC_PERSON]" in res
+    assert "[SYNTHETIC_CITY]" in res
 
 
 def test_invalid_offsets_rejected():

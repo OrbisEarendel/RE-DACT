@@ -29,8 +29,16 @@ L2_TYPES = {
     T.CASTE, T.DISABILITY, T.HEALTH_INFO,
 }
 
+L3_TYPES = {
+    T.ADDRESS, T.CITY, T.PIN_CODE, T.GEO_COORDINATES, T.ORGANIZATION,
+}
+
 
 def _token(entity_type: str) -> str:
+    return f"[{entity_type}]"
+
+
+def _pseudonym(entity_type: str, value: str) -> str:
     return f"[{entity_type}]"
 
 
@@ -98,8 +106,8 @@ def apply(text: str, ents: list[Entity], level: int,
     """
     if not isinstance(text, str):
         raise TypeError("text must be a string")
-    if level not in (1, 2):
-        raise ValueError("levels.py currently implements L1 and L2 only")
+    if level not in (1, 2, 3, 4):
+        raise ValueError("level must be 1, 2, 3, or 4")
 
     candidates: list[tuple[int, int, float, str]] = []
     for ent in ents:
@@ -109,9 +117,11 @@ def apply(text: str, ents: list[Entity], level: int,
         value = text[ent.start:ent.end]
         ctype = canonical(ent.type)
         if ctype in L1_TYPES:
-            replacement = _mask(ctype, value)
+            replacement = _mask(ctype, value) if level < 4 else f"[SYNTHETIC_{ctype}]"
         elif level >= 2 and ctype in L2_TYPES:
-            replacement = _generalize(ctype, value)
+            replacement = _generalize(ctype, value) if level < 4 else f"[SYNTHETIC_{ctype}]"
+        elif level >= 3 and ctype in L3_TYPES:
+            replacement = _pseudonym(ctype, value) if level < 4 else f"[SYNTHETIC_{ctype}]"
         else:
             continue
         candidates.append((ent.start, ent.end, float(ent.score), replacement))
