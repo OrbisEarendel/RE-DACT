@@ -9,7 +9,6 @@ __pycache__/
 *.pdf
 *.jpeg
 *.jpg
-*.png
 uploads/
 outputs/
 models/

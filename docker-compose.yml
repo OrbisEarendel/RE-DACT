@@ -1,0 +1,16 @@
+services:
+  redact:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: redact:latest
+    container_name: redact-app
+    ports:
+      - "8000:8000"
+    environment:
+      - REDACT_OFFLINE=1
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+    volumes:
+      # Mount host Desktop so files saved from the container appear on host Desktop
+      - ${HOME}/Desktop/REDACT_Outputs:/root/Desktop/REDACT_Outputs
+    restart: unless-stopped

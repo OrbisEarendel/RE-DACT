@@ -1,0 +1,14 @@
+# RE-DACT dependencies
+# Note: torch CPU build is installed via --index-url in Dockerfile or setup script
+paddlepaddle==3.2.0
+paddleocr==3.7.0
+paddlex==3.7.2
+gliner==0.2.30
+transformers>=4.40.0
+huggingface_hub>=0.23.0
+opencv-python-headless==4.10.0.84
+pymupdf>=1.24.0
+pillow>=10.0.0
+faker>=30.0.0
+numpy>=1.26.0,<3.0.0
+pytest>=8.0.0
