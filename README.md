@@ -21,8 +21,6 @@ Zero cloud dependencies · In-memory processing · Real-time level slider · Tam
 
 <p>
   <a href="#quickstart"><img alt="Python 3.12" src="https://img.shields.io/badge/PYTHON-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white"></a>
-  <a href="#security--privacy"><img alt="Offline First" src="https://img.shields.io/badge/RUNTIME-100%25%20OFFLINE-00F0FF?style=for-the-badge&labelColor=0C1213"></a>
-  <a href="#security--privacy"><img alt="Zero Cloud APIs" src="https://img.shields.io/badge/CLOUD%20APIS-ZERO-80D4DC?style=for-the-badge&labelColor=0C1213"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/LICENSE-MIT-80CBC4?style=for-the-badge&labelColor=0C1213"></a>
   <a href="#architecture--pipeline"><img alt="Streamlit UI" src="https://img.shields.io/badge/UI-STREAMLIT-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white"></a>
 </p>
@@ -30,7 +28,6 @@ Zero cloud dependencies · In-memory processing · Real-time level slider · Tam
   <img alt="OCR" src="https://img.shields.io/badge/OCR-PADDLEOCR-80CBC4?style=for-the-badge&labelColor=0C1213">
   <img alt="NER" src="https://img.shields.io/badge/NER-GLiNER%20PII-B7C7EA?style=for-the-badge&labelColor=0C1213">
   <img alt="PDF" src="https://img.shields.io/badge/PDF-PYMUPDF%20TRUE%20REDACTION-FF6F00?style=for-the-badge&labelColor=0C1213">
-  <img alt="Audit" src="https://img.shields.io/badge/AUDIT-HMAC--SHA256-green?style=for-the-badge&labelColor=0C1213">
 </p>
 
 </div>
