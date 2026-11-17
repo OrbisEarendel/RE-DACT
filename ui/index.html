@@ -120,7 +120,7 @@ addEventListener('dragleave',e=>{if(!e.relatedTarget){const d=$('.drop');if(d)d.
 addEventListener('drop',e=>{e.preventDefault();const d=$('.drop');if(d)d.classList.remove('over');if(S.step==='files'&&e.dataTransfer.files.length)addFiles([...e.dataTransfer.files])});
 
 /* ---------- Views ---------- */
-const STEPS=[['files','Files'],['choose','Redact'],['level','Privacy'],['review','Review']];
+const STEPS=[['files','Files'],['level','Privacy Level'],['review','Review']];
 function stepper(){const i=STEPS.findIndex(s=>s[0]===S.step);$('#steps').innerHTML=i<0?'':STEPS.map((s,k)=>`<span class="${k===i?'on':k<i?'done':''}">${s[1]}</span>`).join('')}
 const acts=(back,next,label,dis)=>`<div class="acts">${back?`<button class="btn" data-go="${back}">Back</button>`:'<span></span>'}<button class="btn p" data-go="${next}" ${dis?'disabled':''}>${label}</button></div>`;
 const V={
@@ -129,31 +129,28 @@ files(){const n=S.files.length;
   return `<div class="hero"><h1>Your data. Your privacy. Your control.</h1><p class="lead">Remove personal details from documents, spreadsheets and images. Everything stays on this computer.</p></div>
   ${n?`<div class="drop sm"><span>${n} file${n>1?'s':''} selected. Drop more anywhere here.</span><button class="btn" data-pick>Add more files</button></div>`:`<div class="drop"><svg class="big" viewBox="0 0 24 24"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M5 16v3h14v-3"/></svg><p>Drag files here, or choose them from your computer.<br>Text, Excel, PDF and image files${S.eng&&S.eng.video?', video':''}.</p><button class="btn p" data-pick>Browse files</button></div>`}
   ${S.msg?`<div class="note er">${esc(S.msg)}</div>`:''}${list}
-  ${acts('', 'choose','Continue',!n)}`},
-choose(){const c=S.cats;
-  return `<h1>What should be removed?</h1><p class="lead">Pick the kinds of information to find in your files.</p>
-  <div class="tools"><button data-all>Select all</button><button data-none>Clear</button></div>
-  <div class="cats">${CATS.map(([k,t,d])=>`<label class="cat"><input type="checkbox" data-cat="${k}" ${c.has(k)?'checked':''}><span><b>${t}</b><small>${d}</small></span></label>`).join('')}</div>
-  <div class="cust"><b style="font-weight:500">Specific words or phrases</b><input type="text" id="cu" placeholder="Type a name or phrase and press Enter" style="margin-top:8px"><div class="chips">${S.custom.map((x,i)=>`<span class="chip">${esc(x)}<button data-cx="${i}" aria-label="Remove ${esc(x)}">×</button></span>`).join('')}</div></div>
-  ${acts('files','level','Continue',!c.size&&!S.custom.length)}`},
+  ${acts('', 'level','Continue',!n)}`},
 level(){const L=LEVELS[S.level],mk=i=>SAMPLE.map(p=>typeof p==='string'?esc(p):i===null?p[0]:`<mark>${p[1][i]}</mark>`).join('');
-  return `<h1>How private should it be?</h1><p class="lead">Choose how detected information is transformed.</p>
+  return `<h1>How private should it be?</h1><p class="lead">Choose how detected personal data is transformed.</p>
   <div class="scale" role="radiogroup" aria-label="Privacy level"><div class="thumb" style="transform:translateX(${S.level*100}%)"></div>${LEVELS.map((l,i)=>`<button class="lv" role="radio" aria-checked="${i===S.level}" data-lv="${i}">${l[0]}</button>`).join('')}</div>
   <p class="explain"><b>${L[0]}.</b> ${L[1]}</p>
   <div class="ex"><small>Original</small><p>${mk(null)}</p><small>Result</small><p>${mk(S.level)}</p></div>
-  ${acts('choose','review','Continue')}`},
-review(){const cn=CATS.filter(c=>S.cats.has(c[0])).map(c=>c[1]).concat(S.custom.map(x=>`“${x}”`));
+  <div class="fine" style="margin-top:16px;background:var(--s1);padding:10px 14px;border-radius:8px"><b>Format note:</b> Visual images and scanned PDF pages are always masked with solid blackout boxes. Textual generalisation applies to documents with readable text.</div>
+  ${acts('files','review','Continue')}`},
+review(){const piiDesc = S.level === 0
+    ? 'L1 Direct Identifiers: Names, Aadhaar, PAN, Passport, USN, Phone, Email, Bank A/c, Cards, UPI, Biometric Photos & QR'
+    : 'L2 Direct Identifiers + Generalised Quasi-Identifiers (Ages, Dates, Professional roles)';
   return `<h1>Ready to redact</h1><p class="lead">Check your choices before starting.</p>
   <dl class="sum" style="margin:0"><div><dt>Files</dt><dd style="margin:0">${S.files.length} selected<br><small style="color:var(--tx2)">${S.files.slice(0,5).map(f=>esc(f.file.name)).join(', ')}${S.files.length>5?` and ${S.files.length-5} more`:''}</small></dd></div>
-  <div><dt>Removing</dt><dd style="margin:0">${cn.join(', ')}</dd></div><div><dt>Privacy level</dt><dd style="margin:0">${LEVELS[S.level][0]}</dd></div></dl>
+  <div><dt>Policy scope</dt><dd style="margin:0">${piiDesc}</dd></div><div><dt>Privacy level</dt><dd style="margin:0">${LEVELS[S.level][0]}</dd></div></dl>
   <div class="note">Your original files are not changed. Results go to a new folder.</div>
-  ${S.msg?`<div class="note er">${S.msg}${S.eng?'':' <a href="#" data-prev style="color:inherit">Preview the remaining screens (layout only)</a>'}</div>`:''}
+  ${S.msg?`<div class="note er">${S.msg}</div>`:''}
   <div class="acts"><button class="btn" data-go="level">Go back and edit</button><button class="btn p" data-start>Start redaction</button></div>`},
 processing(){const J=S.job||{progress:.4,files:S.files.map((f,i)=>({name:f.file.name,status:i?'waiting':'running'}))},p=Math.round((J.progress||0)*100),cur=(J.files.find(f=>f.status==='running')||{}).name;
   const lab={waiting:'Waiting',running:'Detecting and redacting',done:'Done',failed:'Failed'};
-  return `<h1>Redacting on this computer</h1><p class="lead">${cur?esc(cur):'Starting'}</p>
-  <div class="bar ${S.preview?'':'live'}"><i style="width:${p}%"></i></div><div class="st">${p}%</div>
-  <div class="list">${J.files.map(f=>`<div class="row">${icon(ext(f.name))}<div class="n"><div>${esc(f.name)}</div></div><span class="st ${f.status==='done'?'ok':f.status==='failed'?'er':''}">${lab[f.status]||f.status}</span></div>`).join('')}</div>
+  return `<h1>Redacting on this computer</h1><p class="lead" id="p-cur">${cur?esc(cur):'Starting'}</p>
+  <div class="bar ${S.preview?'':'live'}"><i id="p-bar" style="width:${p}%"></i></div><div class="st" id="p-pct">${p}%</div>
+  <div class="list" id="p-list">${J.files.map(f=>`<div class="row" id="p-row-${esc(f.name)}">${icon(ext(f.name))}<div class="n"><div>${esc(f.name)}</div></div><span class="st ${f.status==='done'?'ok':f.status==='failed'?'er':''}">${lab[f.status]||f.status}</span></div>`).join('')}</div>
   ${S.preview?`<div class="note">Layout preview only. No files are being processed.</div><div class="acts"><span></span><button class="btn p" data-go="results">Next screen</button></div>`:''}`},
 results(){const J=S.job||{files:S.files.map(f=>({name:f.file.name,status:'preview'}))},d=J.files.filter(f=>f.status==='done'),bad=J.files.filter(f=>f.status==='failed'),pv=(J.files[S.sel]||{}).preview;
   return `<div class="ok-c"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
@@ -168,24 +165,42 @@ results(){const J=S.job||{files:S.files.map(f=>({name:f.file.name,status:'previe
 function render(){stepper();const m=$('#main');m.innerHTML=`<div class="screen">${V[S.step]()}</div>`}
 function go(s){S.step=s;S.msg='';render();scrollTo(0,0)}
 
+function updateProgress(j){
+  const p=Math.round((j.progress||0)*100);
+  const b=document.getElementById('p-bar'),pct=document.getElementById('p-pct'),cur=document.getElementById('p-cur');
+  if(b)b.style.width=p+'%';
+  if(pct)pct.textContent=p+'%';
+  const running=(j.files.find(f=>f.status==='running')||{}).name;
+  if(cur&&running)cur.textContent=running;
+  const lab={waiting:'Waiting',running:'Detecting and redacting',done:'Done',failed:'Failed'};
+  j.files.forEach(f=>{
+    const row=document.getElementById('p-row-'+f.name);
+    if(row){
+      const st=row.querySelector('.st');
+      if(st){
+        st.className='st '+(f.status==='done'?'ok':f.status==='failed'?'er':'');
+        st.textContent=lab[f.status]||f.status;
+      }
+    }
+  });
+}
+
 /* ---------- Actions ---------- */
 async function start(){
   if(!S.eng){S.msg='The redaction engine is not connected, so nothing was processed. Run RE-DACT from its container to enable processing.';return render()}
   S.step='processing';S.job={progress:0,files:S.files.map(f=>({name:f.file.name,status:'waiting'}))};render();
-  try{const {id}=await API.start(S.files,{categories:[...S.cats],custom:S.custom,level:LEVELS[S.level][0].toLowerCase()});S.id=id;
-    poll=setInterval(async()=>{try{const j=await API.job(id);S.job=j;if(j.status==='running')return render();clearInterval(poll);go('results')}catch(e){clearInterval(poll);S.step='review';S.msg='Lost contact with the engine. Nothing was saved.';render()}},700)}
+  try{const {id}=await API.start(S.files,{level:LEVELS[S.level][0].toLowerCase()});S.id=id;
+    poll=setInterval(async()=>{try{const j=await API.job(id);S.job=j;if(j.status==='running'){updateProgress(j);return}clearInterval(poll);go('results')}catch(e){clearInterval(poll);S.step='review';S.msg='Lost contact with the engine. Nothing was saved.';render()}},500)}
   catch(e){S.step='review';S.msg='The engine could not start this job.';render()}}
 document.addEventListener('click',async e=>{const t=e.target.closest('[data-go],[data-pick],[data-rm],[data-all],[data-none],[data-cx],[data-lv],[data-start],[data-prev],[data-sel],[data-save],[data-open],[data-reset]');if(!t)return;const d=t.dataset;
   if(d.go)go(d.go);else if('pick' in d)picker.click();
   else if(d.rm){S.files=S.files.filter(f=>f.id!=d.rm);render()}
-  else if('all' in d){CATS.forEach(c=>S.cats.add(c[0]));render()}else if('none' in d){S.cats.clear();render()}
   else if(d.cx){S.custom.splice(+d.cx,1);render()}else if(d.lv){S.level=+d.lv;render()}
   else if('start' in d)start();else if('prev' in d){e.preventDefault();S.preview=true;S.job=null;go('processing')}
   else if(d.sel){S.sel=+d.sel;render()}
   else if('save' in d){try{const r=await API.save(S.id);S.saved=r.folder;S.msg=''}catch(x){S.msg='Could not save to the Desktop. Check that the container has the Desktop folder mounted.'}render()}
   else if('open' in d){try{await API.open(S.id)}catch(x){}}
   else if('reset' in d){S.files=[];S.job=null;S.id=null;S.saved='';S.preview=false;go('files')}});
-document.addEventListener('change',e=>{const k=e.target.dataset.cat;if(!k)return;e.target.checked?S.cats.add(k):S.cats.delete(k);render()});
 document.addEventListener('keydown',e=>{if(e.target.id==='cu'&&e.key==='Enter'){const v=e.target.value.trim();if(v&&!S.custom.includes(v)){S.custom.push(v);render();$('#cu').focus()}}});
 render();
 API.health().then(h=>{S.eng=h;render()}).catch(()=>{S.eng=null});

@@ -120,29 +120,8 @@ def run_job(job_id: str, files: list[tuple[str, bytes]], options: dict):
     level_name = options.get("level", "mask").lower()
     level_int = LEVEL_MAP.get(level_name, 1)
 
-    # Map UI categories to canonical entity types
-    cat_keys = options.get("categories", [])
-    custom_words = options.get("custom", [])
-
-    # If all or standard categories selected, enabled_types can be None or set
+    # Full legal policy: enabled_types=None applies the full DPDP Act & IT Rules taxonomy
     enabled_types: set[str] | None = None
-    if cat_keys:
-        types_set = set()
-        if "names" in cat_keys:
-            types_set.update(["PERSON"])
-        if "email" in cat_keys:
-            types_set.update(["EMAIL"])
-        if "phone" in cat_keys:
-            types_set.update(["PHONE"])
-        if "address" in cat_keys:
-            types_set.update(["ADDRESS", "CITY", "PIN_CODE"])
-        if "govid" in cat_keys:
-            types_set.update(["AADHAAR", "PAN", "PASSPORT", "VOTER_ID", "DRIVING_LICENCE", "GSTIN", "USN", "[PHOTO]", "[QR]"])
-        if "fin" in cat_keys:
-            types_set.update(["BANK_ACCOUNT", "CARD_NUMBER", "UPI_ID", "IFSC"])
-        if "other" in cat_keys:
-            types_set.update(["DATE", "AGE", "JOB_TITLE", "ORGANIZATION", "HEALTH_INFO"])
-        enabled_types = types_set
 
     job = JOBS[job_id]
     processed_files = []

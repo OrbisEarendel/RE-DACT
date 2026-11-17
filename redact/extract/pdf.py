@@ -74,37 +74,27 @@ def to_normalized(
         for page_idx in range(len(doc)):
             page = doc[page_idx]
             page_route = route_map.get(page_idx)
-            engine = page_route.engine if page_route else Engine.NATIVE
 
-            if engine == Engine.NATIVE:
-                all_words.extend(_extract_native_page_words(page, page_idx))
-
-            elif engine == Engine.OCR:
-                # Scanned page: rasterize in-memory and run PaddleOCR
+            # Native text layer extracted first whenever available
+            native_words = _extract_native_page_words(page, page_idx)
+            if native_words:
+                all_words.extend(native_words)
+                # If page is mixed (has native text AND large image regions), OCR image regions too
+                if page_route and page_route.engine in (Engine.OCR, Engine.BOTH):
+                    pix = page.get_pixmap(dpi=plan.ocr_dpi)
+                    img_bytes = pix.tobytes("png")
+                    if page_route.ocr_regions:
+                        scale = plan.ocr_dpi / 72.0
+                        for reg in page_route.ocr_regions:
+                            rx1, ry1, rx2, ry2 = [c * scale for c in reg]
+                            ocr_words = ocr(img_bytes, page=page_idx, region=(rx1, ry1, rx2, ry2))
+                            all_words.extend(ocr_words)
+            else:
+                # Scanned page with no native text: rasterize in-memory and run PaddleOCR
                 pix = page.get_pixmap(dpi=plan.ocr_dpi)
                 img_bytes = pix.tobytes("png")
                 page_words = ocr(img_bytes, page=page_idx)
                 all_words.extend(page_words)
-
-            elif engine == Engine.BOTH:
-                # Mixed page: extract native text and OCR image regions
-                native_words = _extract_native_page_words(page, page_idx)
-                all_words.extend(native_words)
-
-                pix = page.get_pixmap(dpi=plan.ocr_dpi)
-                img_bytes = pix.tobytes("png")
-
-                # If specific OCR regions exist, OCR each region; otherwise full page
-                if page_route and page_route.ocr_regions:
-                    # Scale factor between PDF points (72 DPI) and raster image (plan.ocr_dpi)
-                    scale = plan.ocr_dpi / 72.0
-                    for reg in page_route.ocr_regions:
-                        rx1, ry1, rx2, ry2 = [c * scale for c in reg]
-                        ocr_words = ocr(img_bytes, page=page_idx, region=(rx1, ry1, rx2, ry2))
-                        all_words.extend(ocr_words)
-                else:
-                    ocr_words = ocr(img_bytes, page=page_idx)
-                    all_words.extend(ocr_words)
 
         return words_to_normalized(all_words)
     finally:
