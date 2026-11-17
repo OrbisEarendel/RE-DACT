@@ -1,3 +1,6 @@
+"""Shared types. Copied verbatim from AGENTS.md section 5.
+DO NOT CHANGE WITHOUT TEAM AGREEMENT. If the repo already has this file, keep the repo's copy.
+"""
 from dataclasses import dataclass, field
 
 
