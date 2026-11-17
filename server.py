@@ -29,6 +29,8 @@ from redact.detect import detect
 from redact.detect.visual import detect_visual_pii
 from policy import policy
 from redact.writers.image import redact_image_pipeline, redact_image, _ensure_bgr_image
+from redact.writers.pdf import redact_pdf
+from redact.extract.pdf import to_normalized as pdf_to_normalized
 from redact.entity import Word
 from redact.transform.levels import apply as apply_transform
 
@@ -102,6 +104,18 @@ def process_text(text: str, level: int, enabled_types: set[str] | None) -> tuple
     return res_str.encode("utf-8"), {"before": before_preview, "after": after_preview}
 
 
+def process_pdf(data: bytes, level: int, enabled_types: set[str] | None) -> tuple[bytes, dict]:
+    """Process PDF through router/PyMuPDF extraction, detection, policy filtering, and true redaction."""
+    norm_doc = pdf_to_normalized(data)
+    raw_ents = detect(norm_doc.text, threshold=0.4)
+    selected_ents = policy.select(raw_ents, level=level, enabled_types=enabled_types)
+    out_bytes = redact_pdf(data, selected_ents, norm_doc)
+
+    before_preview = norm_doc.text[:200] + ("..." if len(norm_doc.text) > 200 else "")
+    after_preview = f"{len(selected_ents)} items expunged via true PDF redaction"
+    return out_bytes, {"before": before_preview, "after": after_preview}
+
+
 def run_job(job_id: str, files: list[tuple[str, bytes]], options: dict):
     level_name = options.get("level", "mask").lower()
     level_int = LEVEL_MAP.get(level_name, 1)
@@ -140,6 +154,8 @@ def run_job(job_id: str, files: list[tuple[str, bytes]], options: dict):
         try:
             if ext in ("jpg", "jpeg", "png", "bmp", "webp"):
                 out_bytes, preview = process_image(data, level_int, enabled_types)
+            elif ext == "pdf":
+                out_bytes, preview = process_pdf(data, level_int, enabled_types)
             else:
                 text = data.decode("utf-8", errors="replace")
                 out_bytes, preview = process_text(text, level_int, enabled_types)
