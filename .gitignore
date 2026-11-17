@@ -1,0 +1,10 @@
+.venv/
+.venv-paddle/
+__pycache__/
+*.pyc
+*.png
+*.heic
+*.jpeg
+*.jpg
+*.tsv
+*.txt
