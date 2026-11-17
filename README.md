@@ -11,9 +11,12 @@ Zero cloud dependencies · In-memory processing · Real-time level slider · Tam
 
 **[Overview](#overview)** &nbsp;·&nbsp;
 **[Ecosystem](#the-ecosystem)** &nbsp;·&nbsp;
+**[Legal Grounding](#legal-grounding--pii-taxonomy)** &nbsp;·&nbsp;
 **[Architecture](#architecture--pipeline)** &nbsp;·&nbsp;
 **[Redaction Levels](#redaction-levels-l1--l4)** &nbsp;·&nbsp;
+**[Visual PII](#visual-pii-detection-photos--qr-codes)** &nbsp;·&nbsp;
 **[Format Adapters](#format-adapters)** &nbsp;·&nbsp;
+**[Web Application](#web-application--gui)** &nbsp;·&nbsp;
 **[Quickstart](#quickstart)** &nbsp;·&nbsp;
 **[Security & Privacy](#security--privacy)** &nbsp;·&nbsp;
 **[Evaluation](#evaluation--benchmark)** &nbsp;·&nbsp;
@@ -21,13 +24,18 @@ Zero cloud dependencies · In-memory processing · Real-time level slider · Tam
 
 <p>
   <a href="#quickstart"><img alt="Python 3.12" src="https://img.shields.io/badge/PYTHON-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white"></a>
+  <a href="#security--privacy"><img alt="Offline First" src="https://img.shields.io/badge/RUNTIME-100%25%20OFFLINE-00F0FF?style=for-the-badge&labelColor=0C1213"></a>
+  <a href="#security--privacy"><img alt="Zero Cloud APIs" src="https://img.shields.io/badge/CLOUD%20APIS-ZERO-80D4DC?style=for-the-badge&labelColor=0C1213"></a>
+  <a href="#legal-grounding--pii-taxonomy"><img alt="DPDP Act 2023" src="https://img.shields.io/badge/COMPLIANCE-DPDP%20ACT%202023%20%7C%20IT%20RULES%202011-80CBC4?style=for-the-badge&labelColor=0C1213"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/LICENSE-MIT-80CBC4?style=for-the-badge&labelColor=0C1213"></a>
-  <a href="#architecture--pipeline"><img alt="Streamlit UI" src="https://img.shields.io/badge/UI-STREAMLIT-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white"></a>
 </p>
 <p>
   <img alt="OCR" src="https://img.shields.io/badge/OCR-PADDLEOCR-80CBC4?style=for-the-badge&labelColor=0C1213">
   <img alt="NER" src="https://img.shields.io/badge/NER-GLiNER%20PII-B7C7EA?style=for-the-badge&labelColor=0C1213">
+  <img alt="Visual PII" src="https://img.shields.io/badge/VISUAL%20PII-OPENCV%20HAAR%20%26%20QR-FF9800?style=for-the-badge&labelColor=0C1213">
   <img alt="PDF" src="https://img.shields.io/badge/PDF-PYMUPDF%20TRUE%20REDACTION-FF6F00?style=for-the-badge&labelColor=0C1213">
+  <a href="#web-application--gui"><img alt="Web Server" src="https://img.shields.io/badge/UI-BUILTIN%20HTTP%20APP-4CAF50?style=for-the-badge&labelColor=0C1213"></a>
+  <img alt="Audit" src="https://img.shields.io/badge/AUDIT-HMAC--SHA256-green?style=for-the-badge&labelColor=0C1213">
 </p>
 
 </div>
@@ -38,18 +46,18 @@ Zero cloud dependencies · In-memory processing · Real-time level slider · Tam
 
 > [!TIP]
 > **Gradational Privacy (L1 to L4): Detect Once, Slide Freely**<br>
-> Detection runs once and caches sensitive spans. Moving the redaction slider instantly shifts transforms from light masking (L1) to quasi-identifier generalization (L2), HMAC-seeded consistent pseudonymization (L3), and synthetic generation (L4) without re-running expensive OCR or NLP models.
+> Detection runs once and caches sensitive spans in a format-agnostic store. Moving the redaction slider instantly shifts transforms from light masking (L1) to quasi-identifier generalization (L2), HMAC-seeded consistent pseudonymization (L3), and synthetic generation (L4) without re-running expensive OCR or NLP models.
 
 ---
 
 ## Overview
 
 Organizations across healthcare, law, finance, and government need to share documents and datasets without exposing personal or proprietary information. Existing de-identification solutions are typically:
-* **All-or-nothing**: blunt redactions that destroy analytical utility.
-* **Fragile & manual**: regex scripts that miss contextual, indirect identifiers.
+* **All-or-nothing**: blunt redactions that destroy analytical and contextual utility.
+* **Fragile & manual**: regex scripts that miss contextual, indirect, or visual identifiers.
 * **Cloud-leaking**: sending private payloads to external LLMs and cloud APIs.
 
-**RE-DACT** solves this with a **deterministic, modular pipeline** built on open local NLP, rule-based checksums, and true format-native redaction adapters. It guarantees that the output matches the exact structure of the input, validates that no sensitive originals survive via an automated anti-leak verification scan, and provides cryptographic proof of sanitization through an HMAC-SHA256 signed audit report.
+**RE-DACT** solves this with a **deterministic, modular pipeline** built on open local NLP, rule-based checksums, offline computer vision, and true format-native redaction adapters. It guarantees that the output matches the exact structure of the input, sanitizes text alongside non-text visual PII (face portraits and biometric QR codes), validates that no sensitive originals survive via an automated anti-leak verification scan, and provides cryptographic proof of sanitization through an HMAC-SHA256 signed audit report.
 
 Built for **CONVERGE '26** (Blockchain & Cybersecurity Track) by team **StrangerStrings**.
 
@@ -67,31 +75,34 @@ Built for **CONVERGE '26** (Blockchain & Cybersecurity Track) by team **Stranger
 <td>
 
 * **Content Gate**: Real MIME inspection, size caps, and decompression bomb guards
-* **Dual-Path Routing**: Native extraction for digital text; PaddleOCR for scans/images
-* **Regex + Checksum**: Deterministic detection with Verhoeff validation (Aadhaar, PAN, phones, emails)
-* **Zero-Shot NER**: GLiNER (`urchade/gliner_multi_pii-v1`) for names, orgs, and locations
-* **Context Engine**: Cue words, title rules, and mention propagation
+* **Dual-Path Routing**: Native-first extraction for digital text; PaddleOCR for scans/images
+* **Regex + Checksum**: Verhoeff checksum for 12-digit Aadhaar; Luhn algorithm for cards; PAN, Passport, Voter ID, Driving License, Vehicle Reg, IFSC, Phone, Email
+* **Zero-Shot NER**: Local GLiNER (`urchade/gliner_multi_pii-v1`) for names, orgs, and locations
+* **Visual PII Detection**: Offline OpenCV Haar cascade for face portraits; QRCodeDetector for biometric QR codes
+* **Context Engine**: Cue words ("Dr.", "Patient:", "A/c"), form labels, and mention propagation
 * **Span Store**: Format-agnostic in-memory span index
 
 </td>
 <td>
 
-* **L1 (Light)**: Masking direct identifiers (`[PERSON]`, `XXXX XXXX 1234`)
-* **L2 (Medium)**: Generalizing quasi-identifiers (age ranges, month/year dates)
-* **L3 (Strong)**: Consistent pseudonymization (HMAC-seeded `Faker` stand-ins)
+* **Legal Grounding**: Entity taxonomy mapped to India's DPDP Act 2023 & IT Rules 2011
+* **L1 (Light)**: Masking direct identifiers (`[PERSON]`, `XXXX XXXX 1234`, `[PHOTO]`, `[QR]`)
+* **L2 (Medium)**: Generalizing quasi-identifiers (age ranges, minor flags, month/year dates, salary brackets)
+* **L3 (Strong)**: Consistent pseudonymization (HMAC-seeded `Faker` stand-ins across session)
 * **L4 (Synthetic)**: Realistic entity synthesis & perturbed values
-* **Policy Presets**: Configurable entity-level checkboxes and compliance profiles
+* **Policy Presets**: Configurable entity-level checkboxes and legal compliance profiles
 * **In-Memory Mappings**: Ephemeral real-to-fake translation discarded after session
 
 </td>
 <td>
 
-* **Plaintext & Logs**: Exact offset replacement preserving encoding and whitespace
-* **Datasets (CSV/JSON/XLSX)**: Value modification with structure & formula preservation
+* **Plaintext & Logs**: Exact offset replacement preserving encoding, BOM, and whitespace
+* **Datasets (CSV/JSON/XLSX)**: Value modification with structure, headers, and formula preservation
 * **Images**: True pixel clearing and flattening with EXIF metadata stripping
-* **PDFs**: PyMuPDF true redaction (destroys underlying text/pixels; strips metadata)
+* **PDFs**: PyMuPDF true binary redaction (destroys underlying text/pixels; strips metadata, annotations, bookmarks)
 * **Anti-Leak Re-scan**: Output re-extraction searching for residual originals
 * **Cryptographic Report**: HMAC-SHA256 signed audit certificate
+* **Web UI Server**: Lightweight built-in HTTP server with in-browser preview and safe save
 
 </td>
 </tr>
@@ -99,67 +110,40 @@ Built for **CONVERGE '26** (Blockchain & Cybersecurity Track) by team **Stranger
 
 ---
 
+## Legal Grounding & PII Taxonomy
+
+RE-DACT's policy engine (`policy/policy.py`) is grounded in Indian statutory frameworks:
+1. **Digital Personal Data Protection (DPDP) Act, 2023** (§2(t) Personal Data, §2(c) & §9 Protection of Children/Minors, §15(c) Unique Government Identifiers).
+2. **Information Technology (SPDI) Rules, 2011** (Rule 3 — Sensitive Personal Data or Information).
+3. **The Aadhaar Act, 2016** (Verhoeff checksum validation).
+
+| Level | Legal Tier | Entity Types Covered | Redaction Action |
+| :---: | :--- | :--- | :--- |
+| **L1** | **Direct Identifiers & Biometrics**<br>*(DPDP §15(c) & IT Rules Rule 3)* | `AADHAAR` (Verhoeff verified), `PAN`, `PASSPORT`, `VOTER_ID`, `DRIVING_LICENSE`, `VEHICLE_REG`, `BANK_ACCOUNT`, `CARD_NUMBER` (Luhn), `IFSC`, `UPI_ID`, `PHONE`, `EMAIL`, `PERSON`, `[PHOTO]` (Face), `[QR]` (Biometric QR) | **Masking**: Generic tokens (`[PERSON]`, `[PHOTO]`) or partial character masks (`XXXX XXXX 1234`). |
+| **L2** | **Quasi-Identifiers & SPDI**<br>*(IT Rules Rule 3 health/demographics & DPDP §2(c))* | `DATE_OF_BIRTH`, `AGE`, `AGE_MINOR` (flagged highest-risk), `GENDER`, `BLOOD_GROUP`, `RELIGION`, `CASTE`, `DISABILITY`, `HEALTH_INFO`, `JOB_TITLE`, `SALARY` | **Generalization**: Reducing precision (e.g., age 34 $\rightarrow$ "30s", date $\rightarrow$ month/year, salary $\rightarrow$ bracket). |
+| **L3** | **Context & Geographic Identifiers** | `ADDRESS`, `CITY`, `STATE`, `PINCODE`, `ORGANIZATION`, `SOCIAL_PROFILE`, `IP_ADDRESS` | **Pseudonymization**: Consistent realistic fakes per session via HMAC-seeded `Faker` (same original entity $\rightarrow$ identical fake). |
+| **L4** | **Complete Synthesis** | All detected sensitive entities | **Full Synthesis**: Complete entity substitution with perturbed numeric values; cross-record statistical linkage broken. |
+
+---
+
 ## Architecture & Pipeline
 
 RE-DACT processes files in a single unified flow where detection is performed once and all subsequent actions are governed by the selected policy level:
 
-```
-[ Input File ]
-      │
-      ▼
-┌──────────────────┐
-│  Gate & Route    │ ── Validate MIME/magic bytes, check size caps, route per page
-└──────────────────┘
-      │
-      ├───────────────────────────────┐
-      ▼                               ▼
-┌──────────────────┐       ┌──────────────────┐
-│ Native Extract   │       │ PaddleOCR Engine │ ── Generates word-level bounding boxes
-└──────────────────┘       └──────────────────┘
-      │                               │
-      └───────────────┬───────────────┘
-                      ▼
-┌──────────────────────────────────────┐
-│ NormalizedDoc (Text + Position Map)  │
-└──────────────────────────────────────┘
-                      │
-                      ▼
-┌──────────────────────────────────────┐
-│ Detection Suite                      │
-│ ├─ Regex + Checksums (Score: 1.0)    │ ── Aadhaar (Verhoeff), PAN, Phone, Email, IFSC
-│ ├─ Zero-Shot GLiNER NER (Score: conf)│ ── Names, Organizations, Locations, Titles
-│ └─ Context Rules & Gazetteer         │ ── Cue words ("Dr.", "Patient:"), mention propagation
-└──────────────────────────────────────┘
-                      │
-                      ▼
-┌──────────────────────────────────────┐
-│ Span Merge (Resolve Overlaps)        │ ── Higher score wins, then longer span
-└──────────────────────────────────────┘
-                      │
-                      ▼
-┌──────────────────────────────────────┐
-│ Policy Engine (Levels L1 – L4)       │ ── User checkboxes + Slider position
-└──────────────────────────────────────┘
-                      │
-                      ▼
-┌──────────────────────────────────────┐
-│ Transform Engine                     │ ── Mask / Generalize / Pseudonymize / Synthesize
-└──────────────────────────────────────┘
-                      │
-                      ▼
-┌──────────────────────────────────────┐
-│ Format Writers                       │ ── Native Text / Tabular / Image / PyMuPDF PDF
-└──────────────────────────────────────┘
-                      │
-                      ▼
-┌──────────────────────────────────────┐
-│ Verification Loop (Anti-Leak Re-scan)│
-└──────────────────────────────────────┘
-      │                           │
-      │ (Residuals found)         │ (Clean)
-      ▼                           ▼
-[ Stricter Retry ]         [ Redacted Document + Signed HMAC Report ]
-```
+<div align="center">
+  <img src="SystemArchitecture.png" alt="RE-DACT System Architecture" width="100%">
+</div>
+
+---
+
+## Visual PII Detection (Photos & QR Codes)
+
+Official documents, certificates, and ID cards (Aadhaar, PAN, Voter IDs) contain critical non-text visual PII that OCR cannot read as text. RE-DACT includes dedicated **visual PII detection**:
+
+* **Personal Portraits & Face Photos (`[PHOTO]`)**: Detected using offline OpenCV Haar Feature-based Cascades (`haarcascade_frontalface_default.xml`).
+* **Biometric QR Codes & Barcodes (`[QR]`)**: Detected using OpenCV's native `QRCodeDetector()`, locating QR regions holding encoded personal demographic or biometric payload.
+* **100% Offline & Lightweight**: Requires zero external network calls and zero additional heavy dependencies, utilizing standard OpenCV.
+* **Permanent Destruction**: Bounding boxes are mapped to `NormalizedDoc` and irreversibly blacked out, blurred, or pixelated in the output image/PDF stream.
 
 ---
 
@@ -169,8 +153,8 @@ The slider controls the depth of de-identification. Changing the level updates t
 
 | Level | Name | Target Entities | Transform Applied | Visual Example |
 | :---: | :--- | :--- | :--- | :--- |
-| **L1** | **Light** | Direct Identifiers (Names, Aadhaar, PAN, Phone, Email, Bank Accounts) | **Masking**: Replaced with generic tokens or partial character masks. | `Priya Sharma` $\rightarrow$ `[PERSON]`<br>`98765 43210` $\rightarrow$ `XXXXX 43210` |
-| **L2** | **Medium** | L1 + Quasi-Identifiers (Ages, Exact Dates, Specific Job Titles) | **Generalization**: Reduces precision to prevent linkage attacks. | `Age 34` $\rightarrow$ `30s`<br>`14/08/1992` $\rightarrow$ `Aug 1992`<br>`Lead Neurosurgeon` $\rightarrow$ `Doctor` |
+| **L1** | **Light** | Direct Identifiers (Names, Aadhaar, PAN, Phone, Email, Bank A/C, Photo, QR) | **Masking**: Replaced with generic tokens or partial character masks. | `Priya Sharma` $\rightarrow$ `[PERSON]`<br>`98765 43210` $\rightarrow$ `XXXXX 43210`<br>Face portrait $\rightarrow$ Blackout box |
+| **L2** | **Medium** | L1 + Quasi-Identifiers (Ages, Exact Dates, Specific Job Titles, Health) | **Generalization**: Reduces precision to prevent linkage attacks. | `Age 34` $\rightarrow$ `30s`<br>`14/08/1992` $\rightarrow$ `Aug 1992`<br>`Lead Neurosurgeon` $\rightarrow$ `Doctor` |
 | **L3** | **Strong** | L2 + Geographic & Demographic Context (Cities, Orgs, Full Addresses) | **Pseudonymization**: Consistent realistic fakes per session via HMAC-seeded `Faker`. | `Dr. Priya Sharma at AIIMS Delhi` $\rightarrow$ `Dr. Ananya Iyer at Apollo Hospital` *(consistent throughout)* |
 | **L4** | **Synthetic** | Complete Entity Replacement | **Full Synthesis**: Complete entity substitution with perturbed numeric values. | Fully synthetic, realistic profile with broken cross-record statistical linkage. |
 
@@ -182,8 +166,28 @@ Redaction occurs directly inside the original format layer to preserve layout, s
 
 * **Plaintext & Logs (`.txt`, `.log`, `.json`)**: Operates on character offsets; preserves original encoding, BOM, whitespace, and line endings.
 * **Tabular Data (`.csv`, `.tsv`, `.xlsx`)**: Modifies data cell values while retaining formulas, column headers, cell dimensions, and sheet structures. Supports cross-row pseudonym consistency.
-* **Images (`.png`, `.jpg`, `.jpeg`, `.heic`)**: OCR maps word-level bounding boxes. Redacted regions are filled and permanently flattened (destroying underlying pixels). All EXIF and GPS tags are stripped.
-* **PDFs (`.pdf`)**: Uses **PyMuPDF true redaction**. Text and pixel coordinates are eradicated from the binary stream (not just overlaid with black rectangles). Strips PDF metadata, annotations, bookmarks, and revision history.
+* **Images (`.png`, `.jpg`, `.jpeg`, `.heic`, `.webp`, `.bmp`)**: PaddleOCR maps word-level bounding boxes alongside OpenCV visual PII boxes. Redacted regions are filled and permanently flattened (destroying underlying pixels). All EXIF and GPS tags are stripped.
+* **PDFs (`.pdf`)**: Native-first text coordinate extraction with PyMuPDF, falling back to PaddleOCR for scanned pages. Uses **PyMuPDF true redaction annotations** to eradicate text and pixel matrices from the binary stream. Strips PDF metadata, annotations, bookmarks, and revision history.
+
+---
+
+## Web Application & GUI
+
+RE-DACT ships with a zero-dependency, high-performance web application powered by a built-in Python HTTP server (`server.py`) and a modern web dashboard (`ui/index.html`):
+
+* **Interactive Local Dashboard**: Runs locally at `http://127.0.0.1:8000/`.
+* **Drag-and-Drop Ingestion**: Multi-file queue supporting simultaneous text, image, and PDF uploads.
+* **Live In-Browser Preview**: Inspect before-and-after redaction results directly in the browser with live visual comparison.
+* **Real-Time Level Slider**: Smoothly adjust redaction levels (**Mask $\leftrightarrow$ Generalise $\leftrightarrow$ Pseudonyms $\leftrightarrow$ Synthetic**) with instant feedback.
+* **Safe Non-Overwriting Save**: One-click download that writes directly to `~/Desktop/REDACT_Outputs` without overwriting existing files (`file_redacted.ext`, `file_redacted_1.ext`).
+* **Zero UI Flicker**: Threaded background job processing with progressive status reporting.
+* **Local REST API**:
+  - `GET /api/health` — System status and capability check.
+  - `POST /api/jobs` — Upload files and start an asynchronous redaction job.
+  - `GET /api/jobs/:id` — Retrieve job progress, file completion status, and preview snippets.
+  - `GET /api/jobs/:id/file/:idx` — Stream the redacted file for in-browser visual inspection.
+  - `POST /api/jobs/:id/save` — Export redacted outputs to the desktop output folder.
+  - `POST /api/jobs/:id/open` — Open the output folder in the native file manager (`xdg-open` / Finder / Explorer).
 
 ---
 
@@ -268,11 +272,11 @@ REDACT_LOG_LEVEL=INFO
 
 ### 3. Launch the Application
 
-#### Streamlit Web GUI
+#### Official Web Dashboard (Fast Built-in Server)
 ```bash
-streamlit run app.py
+python server.py 8000
 ```
-Open `http://localhost:8501` to access the interactive dashboard with drag-and-drop upload, real-time level slider, entity checkboxes, and before/after inspection.
+Open **`http://127.0.0.1:8000/`** in your browser to access the full interactive interface with drag-and-drop processing, real-time level sliders, and live in-browser output previews.
 
 #### CLI Command Line
 ```bash
@@ -287,6 +291,7 @@ python -m app.cli samples/id_card.png --level 3
 ```bash
 pytest -q
 ```
+Runs the full suite of unit and integration tests across checksums, regex identifiers, GLiNER NER, visual PII classifiers, context rules, policy filtering, format writers, and transform levels.
 
 ---
 
@@ -308,7 +313,7 @@ RE-DACT is evaluated against **Microsoft Presidio** using entity-level **Precisi
 
 * **Indian Identification Benchmarks**: High-precision evaluation on national IDs (Aadhaar with Verhoeff validation, PAN, IFSC codes, Indian mobile number formats).
 * **Open Healthcare & De-id Sets**: Evaluated on public benchmark de-identification collections (MIMIC-III de-id subsets, synthetic patient records).
-* **Ablation Studies**: Quantifying the contribution of deterministic rules vs. zero-shot GLiNER vs. context heuristics.
+* **Ablation Studies**: Quantifying the contribution of deterministic rules vs. zero-shot GLiNER vs. context heuristics vs. visual PII detection.
 * **Utility vs. Privacy Curve**: Measuring downstream utility retention across levels L1 through L4.
 
 Run the evaluation harness:
@@ -340,4 +345,4 @@ Developed with pride for **CONVERGE '26** by **StrangerStrings**:
 
 ## License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details. Built using [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR), [GLiNER](https://github.com/urchade/GLiNER), [PyMuPDF](https://github.com/pymupdf/PyMuPDF), and [Streamlit](https://streamlit.io/).
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details. Built using [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR), [GLiNER](https://github.com/urchade/GLiNER), [OpenCV](https://opencv.org/), [PyMuPDF](https://github.com/pymupdf/PyMuPDF), and Python stdlib.
