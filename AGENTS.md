@@ -75,7 +75,7 @@ Bash/zsh users: `source .venv/bin/activate`.
 | Rules | Python `re` + checksums (Verhoeff for Aadhaar) | Deterministic, score 1.0 |
 | Fake data | **Faker** (`en_IN`) + custom generators | Valid-format IDs |
 | PDF | **PyMuPDF** | True redaction (content removed, not covered) |
-| Images | Pillow (open / draw / save), OpenCV (straighten, preprocess) | HEIC needs `pillow-heif` |
+| Images | Pillow (open / draw / save), OpenCV (straighten, preprocess, face & QR detection) | Built-in offline Haar cascade & QRCodeDetector |
 | UI | **Streamlit** | Same code serves offline (localhost) and "web" mode |
 | Tests | pytest | |
 | Baseline | **Presidio** | Used only in `eval/` for the COTS comparison |
@@ -185,6 +185,17 @@ OCR returns words, but numbers get split (`2345 | 6789 | 0123`), so **never run 
 4. Draw boxes on those words only.
 
 The same idea applies to PDFs (word coordinates) and tables (cell references).
+
+### Newly Added Feature: Visual PII Detection (Face/Photo & QR Codes)
+Documents (especially ID cards, certificates, and official records) contain non-text visual PII:
+- **Personal portraits / face photos**
+- **QR codes / Barcodes** encoding personal identifiers (e.g. Aadhaar QR)
+
+Because OCR and GLiNER only process textual characters, visual PII cannot be detected through text extraction. Visual PII is detected directly using OpenCV:
+- `cv2.CascadeClassifier(haarcascade_frontalface_default.xml)` for faces/portraits.
+- `cv2.QRCodeDetector()` for QR codes.
+- 100% offline, zero cloud calls, zero new packages required (uses pre-installed OpenCV).
+- Visual PII bounding boxes are mapped into `Word(text="[PHOTO]", ...)` and `Word(text="[QR]", ...)` in `NormalizedDoc`, and redacted by `writers/image.py`.
 
 ---
 

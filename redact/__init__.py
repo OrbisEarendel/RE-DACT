@@ -1,6 +1,8 @@
 from .detect import detect, detect_gliner, merge
+from .detect.visual import detect_faces, detect_qrcodes, detect_visual_pii
 from .entity import Entity, NormalizedDoc, Word
 from .extract import extract, ocr, to_normalized
+from .writers import redact_image, redact_image_pipeline
 from .gate import (
     DEFAULT_ALLOWED_EXT,
     EncryptedInput,
