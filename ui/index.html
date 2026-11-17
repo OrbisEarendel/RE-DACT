@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RE-DACT</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#F6F6F4;--s1:#EDEDEA;--card:#FBFBFA;--tx:#26292B;--tx2:#6C7174;--bd:#DCDDD9;--ac:#2E5E63;--ac2:rgba(46,94,99,.09);--onac:#F6F6F4;--er:#9A4338;--ok:#3F7A58;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141617;--s1:#1E2122;--card:#1A1D1E;--tx:#E3E5E4;--tx2:#8D9496;--bd:#2B2F30;--ac:#86B8B2;--ac2:rgba(134,184,178,.1);--onac:#141617;--er:#D48A7F;--ok:#82BE9C;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141617;--s1:#1E2122;--card:#1A1D1E;--tx:#E3E5E4;--tx2:#8D9496;--bd:#2B2F30;--ac:#86B8B2;--ac2:rgba(134,184,178,.1);--onac:#141617;--er:#D48A7F;--ok:#82BE9C;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:400 15px/1.5 "Hanken Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;transition:background .25s,color .25s;min-height:100vh}
+button,input{font:inherit;color:inherit}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 28px;border-bottom:1px solid var(--bd)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:.09em;font-size:15px}
+.logo i{width:18px;height:18px;border-radius:4px;background:var(--ac);position:relative}.logo i:after{content:"";position:absolute;left:3px;right:3px;top:8px;height:3px;background:var(--bg);border-radius:1px}
+.hr{display:flex;align-items:center;gap:18px;font-size:13px;color:var(--tx2)}
+.local{display:flex;align-items:center;gap:7px}.local b{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.seg{display:flex;background:var(--s1);border-radius:8px;padding:2px}
+.seg button{border:0;background:none;padding:3px 10px;border-radius:6px;font-size:12px;color:var(--tx2);cursor:pointer;transition:background .2s,color .2s}
+.seg button[aria-pressed=true]{background:var(--card);color:var(--tx);box-shadow:0 0 0 1px var(--bd)}
+.steps{display:flex;gap:6px;justify-content:center;padding:18px 0 0;font-size:13px;color:var(--tx2);min-height:40px}
+.steps span{display:flex;align-items:center;gap:6px}.steps span+span:before{content:"";width:22px;height:1px;background:var(--bd);margin-right:6px}
+.steps .on{color:var(--tx);font-weight:500}.steps .done{color:var(--ac)}
+main{max-width:720px;margin:0 auto;padding:28px 24px 64px}
+.screen{animation:in .28s ease both}@keyframes in{from{opacity:0;transform:translateY(6px)}}
+h1{font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+.lead{color:var(--tx2);margin:0 0 24px;max-width:56ch}
+.hero{text-align:center;padding:14px 0 6px}.hero .lead{margin:0 auto 26px}
+.drop{border:1.5px dashed var(--bd);border-radius:16px;background:var(--card);padding:44px 24px;text-align:center;transition:border-color .2s,background .2s}
+.drop.over{border-color:var(--ac);background:var(--ac2)}.drop.sm{padding:16px;display:flex;justify-content:space-between;align-items:center;text-align:left}
+.drop p{margin:6px 0 18px;color:var(--tx2);font-size:14px}.drop svg.big{width:30px;height:30px;stroke:var(--ac);fill:none;stroke-width:1.4}
+.btn{border:1px solid var(--bd);background:var(--card);padding:8px 16px;border-radius:9px;cursor:pointer;font-weight:500;transition:background .15s,border-color .15s,opacity .15s}
+.btn:hover{background:var(--s1)}.btn.p{background:var(--ac);border-color:var(--ac);color:var(--onac)}.btn.p:hover{opacity:.88}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,input:focus-visible,.lv:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.fine{font-size:13px;color:var(--tx2);margin-top:14px}
+.list{margin:18px 0 0;border-top:1px solid var(--bd)}
+.row{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--bd)}
+.row svg{width:22px;height:22px;flex:none;stroke:var(--tx2);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.row .n{flex:1;min-width:0}.row .n div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row small{color:var(--tx2);font-size:13px}
+.x{border:0;background:none;color:var(--tx2);cursor:pointer;border-radius:6px;padding:4px 8px;font-size:18px;line-height:1}.x:hover{background:var(--s1);color:var(--tx)}
+.st{font-size:13px;color:var(--tx2)}.st.ok{color:var(--ok)}.st.er{color:var(--er)}
+.acts{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:30px}
+.tools{display:flex;gap:6px;margin-bottom:10px;justify-content:flex-end}.tools button{border:0;background:none;color:var(--ac);cursor:pointer;font-size:13px;padding:2px 6px}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+.cat{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--bd);cursor:pointer;align-items:flex-start}.cat b{font-weight:500;display:block}.cat small{color:var(--tx2);font-size:13px;line-height:1.35;display:block}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:18px;height:18px;border:1.5px solid var(--tx2);border-radius:5px;margin:2px 0 0;flex:none;cursor:pointer;transition:background .15s,border-color .15s;background:center/12px no-repeat}
+input[type=checkbox]:checked{background-color:var(--ac);border-color:var(--ac);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.4l2.3 2.3 4.7-5' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.cust{margin-top:22px}.cust input[type=text]{width:100%;padding:10px 14px;border:1px solid var(--bd);border-radius:10px;background:var(--card);outline:none}.cust input[type=text]:focus{border-color:var(--ac)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.chip{background:var(--ac2);color:var(--ac);border-radius:20px;padding:2px 6px 2px 12px;font-size:13px;display:flex;align-items:center;gap:2px}.chip button{border:0;background:none;color:inherit;cursor:pointer;font-size:15px;padding:0 5px}
+.scale{position:relative;display:grid;grid-template-columns:repeat(4,1fr);background:var(--s1);border-radius:12px;padding:4px}
+.thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc(25% - 2px);background:var(--card);border-radius:9px;box-shadow:0 0 0 1px var(--bd);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.lv{position:relative;border:0;background:none;padding:12px 6px;cursor:pointer;border-radius:9px;font-weight:500;font-size:14px;color:var(--tx2);transition:color .2s}.lv[aria-checked=true]{color:var(--tx)}
+.explain{margin:18px 2px 22px;min-height:48px}.explain b{font-weight:600}
+.ex{border:1px solid var(--bd);border-radius:12px;padding:16px 18px;background:var(--card);font-size:14px}.ex small{display:block;color:var(--tx2);font-size:12px;margin-bottom:3px}.ex p{margin:0 0 12px;color:var(--tx2)}.ex p:last-child{margin:0;color:var(--tx)}
+.ex mark{background:var(--ac2);color:var(--ac);border-radius:4px;padding:1px 4px;transition:all .25s}
+.sum{border-top:1px solid var(--bd)}.sum>div{display:grid;grid-template-columns:130px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--bd)}.sum dt{color:var(--tx2)}
+.note{background:var(--s1);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--tx2);margin-top:18px}.note.er{color:var(--er)}
+.bar{height:5px;border-radius:5px;background:var(--s1);overflow:hidden;margin:18px 0 8px}.bar i{display:block;height:100%;background:var(--ac);border-radius:5px;transition:width .4s}.bar.live i{background:linear-gradient(90deg,var(--ac),var(--ac2),var(--ac));background-size:200% 100%;animation:sh 1.6s linear infinite}@keyframes sh{to{background-position:-200% 0}}
+.ok-c{width:44px;height:44px;border-radius:50%;background:var(--ac2);display:grid;place-items:center;margin-bottom:16px}.ok-c svg{width:22px;stroke:var(--ac);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.cmp div{border:1px solid var(--bd);border-radius:10px;padding:12px;font-size:13px;white-space:pre-wrap;max-height:200px;overflow:auto;background:var(--card)}.cmp small{display:block;color:var(--tx2);margin-bottom:4px}
+.row.pick{cursor:pointer}
+@media (max-width:640px){.cats,.cmp{grid-template-columns:1fr}.steps span:not(.on){display:none}.steps span+span:before{display:none}.hr .local{display:none}header{padding:14px 16px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><i></i>RE-DACT</div>
+  <div class="hr"><span class="local"><b></b>Local processing · Offline</span>
+    <div class="seg" role="group" aria-label="Theme" id="theme"></div></div>
+</header>
+<div class="steps" id="steps"></div>
+<main id="main"></main>
+<script>
+/* ---------- Backend adapter ----------
+ Expected local API (served by the Docker container next to this UI):
+  GET  /api/health            -> {ok, video?:bool}
+  POST /api/jobs  (multipart: files[], options=JSON{categories,custom,level}) -> {id}
+  GET  /api/jobs/:id          -> {status:'running'|'done'|'failed', progress:0-1, files:[{name,status,error?,preview?:{before,after},verified?:bool}]}
+  POST /api/jobs/:id/save     -> {folder}   (backend writes to the mounted Desktop folder)
+  POST /api/jobs/:id/open     -> {}
+ Nothing here fakes processing: without the API, Start redaction is blocked. */
+const API={
+  async health(){const c=new AbortController();setTimeout(()=>c.abort(),1500);const r=await fetch('/api/health',{signal:c.signal});if(!r.ok)throw 0;return r.json()},
+  async start(files,opt){const f=new FormData();files.forEach(x=>f.append('files',x.file,x.file.name));f.append('options',JSON.stringify(opt));const r=await fetch('/api/jobs',{method:'POST',body:f});if(!r.ok)throw 0;return r.json()},
+  async job(id){const r=await fetch('/api/jobs/'+id);if(!r.ok)throw 0;return r.json()},
+  async save(id){const r=await fetch('/api/jobs/'+id+'/save',{method:'POST'});if(!r.ok)throw 0;return r.json()},
+  async open(id){await fetch('/api/jobs/'+id+'/open',{method:'POST'})}
+};
+const CATS=[['names','Personal names','People, nicknames, signatures'],['email','Email addresses','Personal and work'],['phone','Phone numbers','Mobile and landline'],['address','Residential addresses','Street, city, postcode'],['govid','Government ID numbers','Aadhaar, PAN, passport, checksum-validated'],['fin','Financial information','Cards, bank accounts, IFSC, UPI'],['other','Other personal details','Dates of birth, ages, job titles, organisations']];
+const LEVELS=[['Mask','Sensitive details are replaced with a label such as [PERSON]. Quick and easy to read.'],['Pseudonyms','Each identity gets a consistent stand-in, so Person A stays Person A throughout your files.'],['Anonymise','Details are generalised, so nothing points back to an individual. Some precision is lost.'],['Synthetic','Realistic fictional data replaces the originals and keeps structure and relationships intact.']];
+const SAMPLE=[['Ravi Kumar',['[PERSON]','Person A','a patient','Gabriel Baria']],' called from ',['98450 12345',['[PHONE NUMBER]','Phone 1','a local number','61144 46608']],' about an appointment at ',['KMC Hospital',['[ORGANISATION]','Org 1','a hospital','Parekh Hospital']],'.'];
+const TYPES={txt:'t',md:'t',log:'t',json:'t',csv:'s',tsv:'s',xlsx:'s',xls:'s',docx:'d',pdf:'d',png:'i',jpg:'i',jpeg:'i',tiff:'i',bmp:'i',mp4:'v',mov:'v',mkv:'v'};
+const GLYPH={t:'<path d="M9 12h6M9 16h4"/>',d:'<path d="M9 12h6M9 15h6M9 18h4"/>',s:'<path d="M9 11h6v7H9zM9 14.5h6M12 11v7"/>',i:'<circle cx="10.5" cy="12.5" r="1"/><path d="M8 18l3-3 2 2 2-2 1 3"/>',v:'<path d="M10 11.5v6l5-3z"/>'};
+const icon=e=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>${GLYPH[TYPES[e]||'t']}</svg>`;
+const S={step:'files',files:[],cats:new Set(['names','email','phone']),custom:[],level:0,eng:null,job:null,msg:'',preview:false,sel:0,saved:''};
+let uid=0,poll=null;
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ext=n=>(n.split('.').pop()||'').toLowerCase();
+const size=b=>b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB';
+const ok=e=>TYPES[e]&&(TYPES[e]!=='v'||(S.eng&&S.eng.video));
+
+/* ---------- Theme ---------- */
+function theme(m){try{localStorage.setItem('redact-theme',m)}catch(e){}applyTheme(m)}
+function applyTheme(m){const r=document.documentElement;m==='system'?r.removeAttribute('data-theme'):r.setAttribute('data-theme',m);
+  $('#theme').innerHTML=[['system','Auto'],['light','Light'],['dark','Dark']].map(([k,l])=>`<button aria-pressed="${k===m}" data-th="${k}">${l}</button>`).join('')}
+let saved='system';try{saved=localStorage.getItem('redact-theme')||'system'}catch(e){}applyTheme(saved);
+$('#theme').addEventListener('click',e=>{const t=e.target.closest('[data-th]');if(t)theme(t.dataset.th)});
+
+/* ---------- Files ---------- */
+function addFiles(list){let bad=[];for(const f of list){const e=ext(f.name);if(!ok(e)){bad.push(f.name);continue}
+  if(S.files.some(x=>x.file.name===f.name&&x.file.size===f.size&&x.file.lastModified===f.lastModified))continue;S.files.push({id:++uid,file:f,ext:e})}
+  S.msg=bad.length?`Not supported: ${bad.slice(0,3).join(', ')}${bad.length>3?' and more':''}. Use text, Excel, PDF or image files.`:'';render()}
+const picker=document.createElement('input');picker.type='file';picker.multiple=true;picker.hidden=true;picker.accept=Object.keys(TYPES).map(e=>'.'+e).join(',');document.body.appendChild(picker);
+picker.onchange=()=>{addFiles([...picker.files]);picker.value=''};
+addEventListener('dragover',e=>{e.preventDefault();const d=$('.drop');if(d)d.classList.add('over')});
+addEventListener('dragleave',e=>{if(!e.relatedTarget){const d=$('.drop');if(d)d.classList.remove('over')}});
+addEventListener('drop',e=>{e.preventDefault();const d=$('.drop');if(d)d.classList.remove('over');if(S.step==='files'&&e.dataTransfer.files.length)addFiles([...e.dataTransfer.files])});
+
+/* ---------- Views ---------- */
+const STEPS=[['files','Files'],['choose','Redact'],['level','Privacy'],['review','Review']];
+function stepper(){const i=STEPS.findIndex(s=>s[0]===S.step);$('#steps').innerHTML=i<0?'':STEPS.map((s,k)=>`<span class="${k===i?'on':k<i?'done':''}">${s[1]}</span>`).join('')}
+const acts=(back,next,label,dis)=>`<div class="acts">${back?`<button class="btn" data-go="${back}">Back</button>`:'<span></span>'}<button class="btn p" data-go="${next}" ${dis?'disabled':''}>${label}</button></div>`;
+const V={
+files(){const n=S.files.length;
+  const list=n?`<div class="list">${S.files.map(f=>`<div class="row">${icon(f.ext)}<div class="n"><div>${esc(f.file.name)}</div><small>${f.ext.toUpperCase()} · ${size(f.file.size)}</small></div><button class="x" data-rm="${f.id}" aria-label="Remove ${esc(f.file.name)}">×</button></div>`).join('')}</div>`:'';
+  return `<div class="hero"><h1>Your data. Your privacy. Your control.</h1><p class="lead">Remove personal details from documents, spreadsheets and images. Everything stays on this computer.</p></div>
+  ${n?`<div class="drop sm"><span>${n} file${n>1?'s':''} selected. Drop more anywhere here.</span><button class="btn" data-pick>Add more files</button></div>`:`<div class="drop"><svg class="big" viewBox="0 0 24 24"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M5 16v3h14v-3"/></svg><p>Drag files here, or choose them from your computer.<br>Text, Excel, PDF and image files${S.eng&&S.eng.video?', video':''}.</p><button class="btn p" data-pick>Browse files</button></div>`}
+  ${S.msg?`<div class="note er">${esc(S.msg)}</div>`:''}${list}
+  ${acts('', 'choose','Continue',!n)}`},
+choose(){const c=S.cats;
+  return `<h1>What should be removed?</h1><p class="lead">Pick the kinds of information to find in your files.</p>
+  <div class="tools"><button data-all>Select all</button><button data-none>Clear</button></div>
+  <div class="cats">${CATS.map(([k,t,d])=>`<label class="cat"><input type="checkbox" data-cat="${k}" ${c.has(k)?'checked':''}><span><b>${t}</b><small>${d}</small></span></label>`).join('')}</div>
+  <div class="cust"><b style="font-weight:500">Specific words or phrases</b><input type="text" id="cu" placeholder="Type a name or phrase and press Enter" style="margin-top:8px"><div class="chips">${S.custom.map((x,i)=>`<span class="chip">${esc(x)}<button data-cx="${i}" aria-label="Remove ${esc(x)}">×</button></span>`).join('')}</div></div>
+  ${acts('files','level','Continue',!c.size&&!S.custom.length)}`},
+level(){const L=LEVELS[S.level],mk=i=>SAMPLE.map(p=>typeof p==='string'?esc(p):i===null?p[0]:`<mark>${p[1][i]}</mark>`).join('');
+  return `<h1>How private should it be?</h1><p class="lead">Choose how detected information is transformed.</p>
+  <div class="scale" role="radiogroup" aria-label="Privacy level"><div class="thumb" style="transform:translateX(${S.level*100}%)"></div>${LEVELS.map((l,i)=>`<button class="lv" role="radio" aria-checked="${i===S.level}" data-lv="${i}">${l[0]}</button>`).join('')}</div>
+  <p class="explain"><b>${L[0]}.</b> ${L[1]}</p>
+  <div class="ex"><small>Original</small><p>${mk(null)}</p><small>Result</small><p>${mk(S.level)}</p></div>
+  ${acts('choose','review','Continue')}`},
+review(){const cn=CATS.filter(c=>S.cats.has(c[0])).map(c=>c[1]).concat(S.custom.map(x=>`“${x}”`));
+  return `<h1>Ready to redact</h1><p class="lead">Check your choices before starting.</p>
+  <dl class="sum" style="margin:0"><div><dt>Files</dt><dd style="margin:0">${S.files.length} selected<br><small style="color:var(--tx2)">${S.files.slice(0,5).map(f=>esc(f.file.name)).join(', ')}${S.files.length>5?` and ${S.files.length-5} more`:''}</small></dd></div>
+  <div><dt>Removing</dt><dd style="margin:0">${cn.join(', ')}</dd></div><div><dt>Privacy level</dt><dd style="margin:0">${LEVELS[S.level][0]}</dd></div></dl>
+  <div class="note">Your original files are not changed. Results go to a new folder.</div>
+  ${S.msg?`<div class="note er">${S.msg}${S.eng?'':' <a href="#" data-prev style="color:inherit">Preview the remaining screens (layout only)</a>'}</div>`:''}
+  <div class="acts"><button class="btn" data-go="level">Go back and edit</button><button class="btn p" data-start>Start redaction</button></div>`},
+processing(){const J=S.job||{progress:.4,files:S.files.map((f,i)=>({name:f.file.name,status:i?'waiting':'running'}))},p=Math.round((J.progress||0)*100),cur=(J.files.find(f=>f.status==='running')||{}).name;
+  const lab={waiting:'Waiting',running:'Detecting and redacting',done:'Done',failed:'Failed'};
+  return `<h1>Redacting on this computer</h1><p class="lead">${cur?esc(cur):'Starting'}</p>
+  <div class="bar ${S.preview?'':'live'}"><i style="width:${p}%"></i></div><div class="st">${p}%</div>
+  <div class="list">${J.files.map(f=>`<div class="row">${icon(ext(f.name))}<div class="n"><div>${esc(f.name)}</div></div><span class="st ${f.status==='done'?'ok':f.status==='failed'?'er':''}">${lab[f.status]||f.status}</span></div>`).join('')}</div>
+  ${S.preview?`<div class="note">Layout preview only. No files are being processed.</div><div class="acts"><span></span><button class="btn p" data-go="results">Next screen</button></div>`:''}`},
+results(){const J=S.job||{files:S.files.map(f=>({name:f.file.name,status:'preview'}))},d=J.files.filter(f=>f.status==='done'),bad=J.files.filter(f=>f.status==='failed'),pv=(J.files[S.sel]||{}).preview;
+  return `<div class="ok-c"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+  <h1>${S.preview?'Results layout':`${d.length} file${d.length===1?'':'s'} redacted`}</h1>
+  <p class="lead">${S.preview?'Preview only. Nothing was processed or saved.':bad.length?`${bad.length} could not be processed.`:'Your originals were not modified.'}</p>
+  <div class="list">${J.files.map((f,i)=>`<div class="row pick" data-sel="${i}">${icon(ext(f.name))}<div class="n"><div>${esc(f.name)}</div>${f.error?`<small>${esc(f.error)}</small>`:''}</div><span class="st ${f.status==='done'?'ok':f.status==='failed'?'er':''}">${f.status==='done'?'Redacted':f.status==='failed'?'Failed':'Preview'}</span></div>`).join('')}</div>
+  ${pv?`<div class="cmp"><div><small>Before</small>${esc(pv.before)}</div><div><small>After</small>${esc(pv.after)}</div></div>`:''}
+  <div class="note">${S.preview?'':`Re-extraction check: ${J.files.every(f=>f.verified)?'passed for every file.':'not reported by the engine.'} `}Output is written to a new folder, never over your originals.${S.saved?`<br>Saved to ${esc(S.saved)}`:''}</div>
+  ${S.msg?`<div class="note er">${esc(S.msg)}</div>`:''}
+  <div class="acts"><button class="btn" data-reset>Start over</button><span style="display:flex;gap:8px">${S.saved?'<button class="btn" data-open>Open folder</button>':''}<button class="btn p" data-save ${S.preview||!d.length?'disabled':''}>${S.saved?'Save again':'Save to Desktop'}</button></span></div>`}
+};
+function render(){stepper();const m=$('#main');m.innerHTML=`<div class="screen">${V[S.step]()}</div>`}
+function go(s){S.step=s;S.msg='';render();scrollTo(0,0)}
+
+/* ---------- Actions ---------- */
+async function start(){
+  if(!S.eng){S.msg='The redaction engine is not connected, so nothing was processed. Run RE-DACT from its container to enable processing.';return render()}
+  S.step='processing';S.job={progress:0,files:S.files.map(f=>({name:f.file.name,status:'waiting'}))};render();
+  try{const {id}=await API.start(S.files,{categories:[...S.cats],custom:S.custom,level:LEVELS[S.level][0].toLowerCase()});S.id=id;
+    poll=setInterval(async()=>{try{const j=await API.job(id);S.job=j;if(j.status==='running')return render();clearInterval(poll);go('results')}catch(e){clearInterval(poll);S.step='review';S.msg='Lost contact with the engine. Nothing was saved.';render()}},700)}
+  catch(e){S.step='review';S.msg='The engine could not start this job.';render()}}
+document.addEventListener('click',async e=>{const t=e.target.closest('[data-go],[data-pick],[data-rm],[data-all],[data-none],[data-cx],[data-lv],[data-start],[data-prev],[data-sel],[data-save],[data-open],[data-reset]');if(!t)return;const d=t.dataset;
+  if(d.go)go(d.go);else if('pick' in d)picker.click();
+  else if(d.rm){S.files=S.files.filter(f=>f.id!=d.rm);render()}
+  else if('all' in d){CATS.forEach(c=>S.cats.add(c[0]));render()}else if('none' in d){S.cats.clear();render()}
+  else if(d.cx){S.custom.splice(+d.cx,1);render()}else if(d.lv){S.level=+d.lv;render()}
+  else if('start' in d)start();else if('prev' in d){e.preventDefault();S.preview=true;S.job=null;go('processing')}
+  else if(d.sel){S.sel=+d.sel;render()}
+  else if('save' in d){try{const r=await API.save(S.id);S.saved=r.folder;S.msg=''}catch(x){S.msg='Could not save to the Desktop. Check that the container has the Desktop folder mounted.'}render()}
+  else if('open' in d){try{await API.open(S.id)}catch(x){}}
+  else if('reset' in d){S.files=[];S.job=null;S.id=null;S.saved='';S.preview=false;go('files')}});
+document.addEventListener('change',e=>{const k=e.target.dataset.cat;if(!k)return;e.target.checked?S.cats.add(k):S.cats.delete(k);render()});
+document.addEventListener('keydown',e=>{if(e.target.id==='cu'&&e.key==='Enter'){const v=e.target.value.trim();if(v&&!S.custom.includes(v)){S.custom.push(v);render();$('#cu').focus()}}});
+render();
+API.health().then(h=>{S.eng=h;render()}).catch(()=>{S.eng=null});
+</script>
+</body>
+</html>
