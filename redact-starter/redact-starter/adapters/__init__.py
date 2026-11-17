@@ -4,9 +4,10 @@ To add a format: write a class following core/interfaces.py and add it to ADAPTE
 """
 import os
 
+from adapters.image_adapter import ImageAdapter
 from adapters.text_adapter import TextAdapter
 
-ADAPTERS = [TextAdapter()]  # P2: add ImageAdapter, PdfAdapter
+ADAPTERS = [TextAdapter(), ImageAdapter()]  # P2: add PdfAdapter
 
 
 def get_adapter(path: str):

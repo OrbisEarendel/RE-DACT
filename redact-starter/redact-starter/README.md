@@ -14,6 +14,24 @@ make test                        # runs the tests
 
 If you don't have `make` (Windows): run `python -m app.cli samples/test.txt --level 1` and `python -m pytest -q`.
 
+## Turning on the real models (do this after `make test` is green)
+
+```bash
+pip install -r requirements-ml.txt      # follow the CPU-wheel note inside the file
+export REDACT_USE_GLINER=1              # Windows PowerShell: $env:REDACT_USE_GLINER="1"
+python -m app.cli samples/test.txt --level 1
+python -m app.cli samples/test.png --level 1   # image path needs PaddleOCR
+```
+
+- **GLiNER** (`detect/gliner_detector.py`, P1): finds names, dates, addresses etc. Default model
+  `knowledgator/gliner-pii-base-v1.0` (Apache-2.0). Alternatives: `urchade/gliner_multi_pii-v1`
+  (Apache-2.0), `nvidia/gliner-PII` (NVIDIA Open Model License: read it before using).
+  Tune `REDACT_GLINER_THRESHOLD` (0.3 default, lower = more recall).
+- **PaddleOCR** (`adapters/image_adapter.py`, P2): reads text lines + boxes from images.
+- Both download models on first run. For the offline container, download once and bake the
+  files into the Docker image (P4).
+- Without these installed, everything else still runs with the regex stub detector.
+
 ## Who owns what
 
 | Folder | Owner | Job |
