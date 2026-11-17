@@ -11,10 +11,7 @@ from redact.entity import Entity
 from redact.detect.gliner_ner import detect_gliner
 from redact.detect.merge import merge
 
-try:
-    from redact.detect.regex_rules import detect_regex  # type: ignore
-except ImportError:
-    detect_regex = None
+from redact.detect.regex_rules import find as find_regex
 
 
 def detect(doc_text: str, threshold: float = 0.4) -> list[Entity]:
@@ -31,10 +28,9 @@ def detect(doc_text: str, threshold: float = 0.4) -> list[Entity]:
     gliner_ents = detect_gliner(doc_text, threshold=threshold)
     all_ents.extend(gliner_ents)
 
-    # 2. Regex & checksum detector (Alan's module when integrated)
-    if detect_regex is not None:
-        regex_ents = detect_regex(doc_text)
-        all_ents.extend(regex_ents)
+    # 2. Regex + checksum + context-word detector (Alan's module)
+    regex_ents = find_regex(doc_text)
+    all_ents.extend(regex_ents)
 
     # 3. Merge overlapping spans (higher score wins, then longer span)
     return merge(all_ents)
