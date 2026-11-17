@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 .venv
 .venv/
@@ -7,6 +7,9 @@
 .env
 *.heic
 *.pdf
+*.jpeg
+*.jpg
+*.png
 uploads/
 outputs/
 models/

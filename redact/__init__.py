@@ -1,3 +1,4 @@
+from .detect import detect, detect_gliner, merge
 from .entity import Entity, NormalizedDoc, Word
 from .extract import extract, ocr, to_normalized
 from .gate import (
