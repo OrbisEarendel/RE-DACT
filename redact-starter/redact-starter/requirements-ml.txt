@@ -1,7 +1,0 @@
-# Heavy model dependencies. Install AFTER requirements.txt. Needs internet once to fetch models.
-#
-# 1) PaddlePaddle CPU build (install the CPU OR the GPU build, never both):
-#    pip install paddlepaddle==3.2.0 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
-# 2) The rest:
-paddleocr
-gliner

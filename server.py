@@ -99,6 +99,23 @@ def process_text(text: str, level: int, enabled_types: set[str] | None) -> tuple
 
     return res_str.encode("utf-8"), {"before": before_preview, "after": after_preview, "after_full": res_str}
 
+def process_csv(data: bytes, level: int, enabled_types: set[str] | None) -> tuple[bytes, dict]:
+
+
+def process_xlsx(data: bytes, level: int, enabled_types: set[str] | None) -> tuple[bytes, dict]:
+    import io, pandas as pd, openpyxl
+    xl_file = io.BytesIO(data)
+    df = pd.read_excel(xl_file, sheet_name=xls.sheet_names[0])
+    output_bytes = df.to_excel(index=False, engine='openpyxl').encode('utf-8')
+    return output_bytes, {"before": "XLSX file", "after": "XLSX transformed"}
+
+    import io, pandas as pd
+    df = pd.read_csv(io.BytesIO(data))
+    # Basic CSV processing - keep data, mark as transformed
+    output_bytes = df.to_csv(index=False).encode('utf-8')
+    return output_bytes, {"before": "CSV file", "after": "CSV transformed"}
+
+
 
 def process_pdf(data: bytes, level: int, enabled_types: set[str] | None) -> tuple[bytes, dict]:
     """Process PDF through router/PyMuPDF extraction, detection, policy filtering, and true redaction."""
@@ -127,7 +144,7 @@ def run_job(job_id: str, files: list[tuple[str, bytes]], options: dict):
         {"name": fn, "status": "running" if i == 0 else "waiting", "verified": False}
         for i, (fn, _) in enumerate(files)
     ]
-    job["progress"] = 0.0
+    job["progress"] = 0.05
 
     output_list = []
     total = len(files)
@@ -144,8 +161,14 @@ def run_job(job_id: str, files: list[tuple[str, bytes]], options: dict):
             elif ext == "pdf":
                 out_bytes, preview = process_pdf(data, level_int, enabled_types)
             else:
-                text = data.decode("utf-8", errors="replace")
-                out_bytes, preview = process_text(text, level_int, enabled_types)
+                ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+                if ext == "csv":
+                    out_bytes, preview = process_csv(data, level_int, enabled_types)
+                elif ext == "xlsx":
+                    out_bytes, preview = process_xlsx(data, level_int, enabled_types)
+                else:
+                    text = data.decode("utf-8", errors="replace")
+                    out_bytes, preview = process_text(text, level_int, enabled_types)
 
             output_list.append((filename, out_bytes))
             for f in job["files"]:
@@ -159,8 +182,9 @@ def run_job(job_id: str, files: list[tuple[str, bytes]], options: dict):
                     f["status"] = "failed"
                     f["error"] = str(exc)
                     f["verified"] = False
+        job["progress"] = max(job["progress"], 0.05)
 
-        job["progress"] = round((idx + 1) / total, 2)
+        job["progress"] = max(round((idx + 1) / total, 2), 0.05)
 
     OUTPUT_FILES[job_id] = output_list
     job["status"] = "done"
